@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暗黑4 Boss 刷新倒计时</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+    --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+    --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+    --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+    --text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
+    --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+    --space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;--space-12:3rem;
+    --radius-md:.5rem;--radius-lg:.75rem;--radius-xl:1rem;
+    --font-body:'Satoshi','PingFang SC','Microsoft YaHei',sans-serif;
+    --transition:180ms cubic-bezier(0.16,1,0.3,1);
+
+    --bg:#f5f2ea;--surface:#faf8f2;--surface-2:#ffffff;--surface-off:#edeae0;
+    --border:#d8d4c8;--text:#1c1a14;--muted:#6b6458;--faint:#a8a298;
+    --gold:#9a6f1a;--gold-dim:#c49030;
+    --red:#b83232;--red-dim:#e06060;
+    --shadow:0 12px 48px oklch(0.2 0.02 80/.15);
+  }
+
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-font-smoothing:antialiased;}
+  body{
+    min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);
+    color:var(--text);background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:var(--space-8) var(--space-4);
+  }
+
+  .cards{
+    display:flex;flex-direction:row;gap:var(--space-6);
+    width:100%;max-width:960px;align-items:stretch;
+  }
+  .card{
+    flex:1;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-xl);padding:var(--space-10) var(--space-8);
+    text-align:center;box-shadow:var(--shadow);
+  }
+  .card.world  { --accent:var(--gold);  --accent-dim:var(--gold-dim); }
+  .card.normal { --accent:var(--red);   --accent-dim:var(--red-dim);  }
+
+  .boss-icon{
+    width:56px;height:56px;margin:0 auto var(--space-4);
+    background:var(--surface-off);border:1px solid var(--border);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+  }
+  .boss-icon svg{width:28px;height:28px;color:var(--accent);}
+
+  .card-title{font-size:var(--text-lg);font-weight:700;color:var(--text);margin-bottom:var(--space-1);}
+  .card-sub{font-size:var(--text-xs);color:var(--faint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:var(--space-6);}
+  .label{font-size:var(--text-xs);color:var(--faint);text-transform:uppercase;letter-spacing:.12em;margin-bottom:var(--space-2);}
+  .spawn-time{font-size:var(--text-base);font-weight:500;color:var(--muted);margin-bottom:var(--space-6);font-variant-numeric:tabular-nums;}
+
+  .countdown-row{display:flex;justify-content:center;align-items:flex-end;gap:var(--space-3);margin-bottom:var(--space-2);}
+  .time-block{display:flex;flex-direction:column;align-items:center;gap:var(--space-1);}
+  .time-number{
+    font-size:var(--text-2xl);font-weight:700;color:var(--accent);
+    font-variant-numeric:tabular-nums;line-height:1;min-width:2.5ch;
+    background:var(--surface-off);border:1px solid var(--border);
+    border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);
+  }
+  .time-unit{font-size:var(--text-xs);color:var(--faint);text-transform:uppercase;letter-spacing:.1em;}
+  .time-sep{font-size:var(--text-xl);font-weight:700;color:var(--faint);padding-bottom:var(--space-6);line-height:1;user-select:none;}
+
+  @keyframes flash{0%{opacity:1}40%{opacity:.35}100%{opacity:1}}
+  .flash{animation:flash .35s ease-out;}
+
+  .progress-wrap{background:var(--surface-off);border-radius:99px;height:4px;margin-top:var(--space-6);overflow:hidden;}
+  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));border-radius:99px;transition:width 1s linear;}
+  .progress-hint{font-size:var(--text-xs);color:var(--faint);margin-top:var(--space-2);text-align:right;}
+
+  @media(max-width:700px){.cards{flex-direction:column;max-width:480px;}}
+  @media(max-width:480px){
+    .card{padding:var(--space-8) var(--space-6);}
+    .time-number{font-size:var(--text-xl);padding:var(--space-2) var(--space-3);}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="cards">
+
+  <!-- World Boss -->
+  <div class="card world">
+    <div class="boss-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+    </div>
+    <p class="card-title">世界首领</p>
+    <p class="card-sub">每 3.5 小时刷新一次</p>
+    <p class="label">下次刷新时间</p>
+    <p class="spawn-time" id="w-spawn">计算中…</p>
+    <p class="label">距离刷新还有</p>
+    <div class="countdown-row" role="timer" aria-live="polite">
+      <div class="time-block"><span class="time-number" id="w-h">00</span><span class="time-unit">时</span></div>
+      <span class="time-sep" aria-hidden="true">:</span>
+      <div class="time-block"><span class="time-number" id="w-m">00</span><span class="time-unit">分</span></div>
+      <span class="time-sep" aria-hidden="true">:</span>
+      <div class="time-block"><span class="time-number" id="w-s">00</span><span class="time-unit">秒</span></div>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="w-bar" style="width:0%"></div></div>
+    <p class="progress-hint" id="w-hint"></p>
+  </div>
+
+  <!-- Normal Boss -->
+  <div class="card normal">
+    <div class="boss-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+    </div>
+    <p class="card-title">巢穴 Boss</p>
+    <p class="card-sub">每 45 分钟刷新一次</p>
+    <p class="label">下次刷新时间</p>
+    <p class="spawn-time" id="n-spawn">计算中…</p>
+    <p class="label">距离刷新还有</p>
+    <div class="countdown-row" role="timer" aria-live="polite">
+      <div class="time-block"><span class="time-number" id="n-m">00</span><span class="time-unit">分</span></div>
+      <span class="time-sep" aria-hidden="true">:</span>
+      <div class="time-block"><span class="time-number" id="n-s">00</span><span class="time-unit">秒</span></div>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="n-bar" style="width:0%"></div></div>
+    <p class="progress-hint" id="n-hint"></p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function flash(el){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+  function fmtDate(ts){
+    return new Date(ts).toLocaleString('zh-CN',{
+      month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false
+    }).replace(/\//g,'-');
+  }
+  function getNext(baseMs, intervalMs){
+    const now = Date.now();
+    let t = baseMs;
+    while(t <= now) t += intervalMs;
+    return t;
+  }
+
+  const WORLD = {
+    base: new Date('2023-10-27T22:00:00+08:00').getTime(),
+    interval: 12600 * 1000,
+    els: { spawn:document.getElementById('w-spawn'), h:document.getElementById('w-h'), m:document.getElementById('w-m'), s:document.getElementById('w-s'), bar:document.getElementById('w-bar'), hint:document.getElementById('w-hint') },
+    prev: { h:-1, m:-1, s:-1 }, next:0, hasHours:true,
+  };
+  const NORMAL = {
+    base: new Date('2023-10-22T14:55:00+08:00').getTime(),
+    interval: 2700 * 1000,
+    els: { spawn:document.getElementById('n-spawn'), m:document.getElementById('n-m'), s:document.getElementById('n-s'), bar:document.getElementById('n-bar'), hint:document.getElementById('n-hint') },
+    prev: { m:-1, s:-1 }, next:0, hasHours:false,
+  };
+
+  function updateCard(cfg){
+    const now = Date.now();
+    if(now >= cfg.next) cfg.next = getNext(cfg.base, cfg.interval);
+    const remaining = cfg.next - now;
+    const elapsed   = cfg.interval - remaining;
+    const totalSecs = Math.floor(remaining / 1000);
+    const h = Math.floor(totalSecs / 3600);
+    const m = Math.floor((totalSecs % 3600) / 60);
+    const s = totalSecs % 60;
+    cfg.els.spawn.textContent = fmtDate(cfg.next);
+    if(cfg.hasHours){
+      if(h !== cfg.prev.h){ cfg.els.h.textContent = pad(h); flash(cfg.els.h); cfg.prev.h = h; }
+      if(m !== cfg.prev.m){ cfg.els.m.textContent = pad(m); flash(cfg.els.m); cfg.prev.m = m; }
+      if(s !== cfg.prev.s){ cfg.els.s.textContent = pad(s); flash(cfg.els.s); cfg.prev.s = s; }
+    } else {
+      const totalM = Math.floor(totalSecs / 60);
+      if(totalM !== cfg.prev.m){ cfg.els.m.textContent = pad(totalM); flash(cfg.els.m); cfg.prev.m = totalM; }
+      if(s !== cfg.prev.s){ cfg.els.s.textContent = pad(s); flash(cfg.els.s); cfg.prev.s = s; }
+    }
+    const pct = Math.min(100, (elapsed / cfg.interval) * 100);
+    cfg.els.bar.style.width = pct.toFixed(2) + '%';
+    cfg.els.hint.textContent = `已过 ${Math.floor(elapsed / 60000)} 分钟`;
+  }
+
+  function tick(){ updateCard(WORLD); updateCard(NORMAL); }
+  tick();
+  setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
