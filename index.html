@@ -73,10 +73,6 @@
   @keyframes flash{0%{opacity:1}40%{opacity:.35}100%{opacity:1}}
   .flash{animation:flash .35s ease-out;}
 
-  .progress-wrap{background:var(--surface-off);border-radius:99px;height:4px;margin-top:var(--space-6);overflow:hidden;}
-  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent-dim),var(--accent));border-radius:99px;transition:width 1s linear;}
-  .progress-hint{font-size:var(--text-xs);color:var(--faint);margin-top:var(--space-2);text-align:right;}
-
   @media(max-width:700px){.cards{flex-direction:column;max-width:480px;}}
   @media(max-width:480px){
     .card{padding:var(--space-8) var(--space-6);}
@@ -110,8 +106,6 @@
       <span class="time-sep" aria-hidden="true">:</span>
       <div class="time-block"><span class="time-number" id="w-s">00</span><span class="time-unit">秒</span></div>
     </div>
-    <div class="progress-wrap"><div class="progress-bar" id="w-bar" style="width:0%"></div></div>
-    <p class="progress-hint" id="w-hint"></p>
   </div>
 
   <!-- Normal Boss -->
@@ -134,8 +128,6 @@
       <span class="time-sep" aria-hidden="true">:</span>
       <div class="time-block"><span class="time-number" id="n-s">00</span><span class="time-unit">秒</span></div>
     </div>
-    <div class="progress-wrap"><div class="progress-bar" id="n-bar" style="width:0%"></div></div>
-    <p class="progress-hint" id="n-hint"></p>
   </div>
 
 </div>
@@ -160,13 +152,13 @@
   const WORLD = {
     base: new Date('2023-10-27T22:00:00+08:00').getTime(),
     interval: 12600 * 1000,
-    els: { spawn:document.getElementById('w-spawn'), h:document.getElementById('w-h'), m:document.getElementById('w-m'), s:document.getElementById('w-s'), bar:document.getElementById('w-bar'), hint:document.getElementById('w-hint') },
+    els: { spawn:document.getElementById('w-spawn'), h:document.getElementById('w-h'), m:document.getElementById('w-m'), s:document.getElementById('w-s') },
     prev: { h:-1, m:-1, s:-1 }, next:0, hasHours:true,
   };
   const NORMAL = {
     base: new Date('2026-03-31T18:45:00+08:00').getTime(),
     interval: 2700 * 1000,
-    els: { spawn:document.getElementById('n-spawn'), m:document.getElementById('n-m'), s:document.getElementById('n-s'), bar:document.getElementById('n-bar'), hint:document.getElementById('n-hint') },
+    els: { spawn:document.getElementById('n-spawn'), m:document.getElementById('n-m'), s:document.getElementById('n-s') },
     prev: { m:-1, s:-1 }, next:0, hasHours:false,
   };
 
@@ -189,9 +181,6 @@
       if(totalM !== cfg.prev.m){ cfg.els.m.textContent = pad(totalM); flash(cfg.els.m); cfg.prev.m = totalM; }
       if(s !== cfg.prev.s){ cfg.els.s.textContent = pad(s); flash(cfg.els.s); cfg.prev.s = s; }
     }
-    const pct = Math.min(100, (elapsed / cfg.interval) * 100);
-    cfg.els.bar.style.width = pct.toFixed(2) + '%';
-    cfg.els.hint.textContent = `已过 ${Math.floor(elapsed / 60000)} 分钟`;
   }
 
   function tick(){ updateCard(WORLD); updateCard(NORMAL); }
