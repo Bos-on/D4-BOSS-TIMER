@@ -86,6 +86,27 @@
 
 <div class="cards">
 
+  <!-- Normal Boss -->
+  <div class="card normal">
+    <div class="boss-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+    </div>
+    <p class="card-title">巢穴首领</p>
+    <p class="label">下次刷新时间</p>
+    <p class="spawn-time" id="n-spawn">计算中…</p>
+    <p class="label">距离刷新还有</p>
+    <div class="countdown-row" role="timer" aria-live="polite">
+      <div class="time-block"><span class="time-number" id="n-m">00</span><span class="time-unit">分</span></div>
+      <span class="time-sep" aria-hidden="true">:</span>
+      <div class="time-block"><span class="time-number" id="n-s">00</span><span class="time-unit">秒</span></div>
+    </div>
+  </div>
+
   <!-- World Boss -->
   <div class="card world">
     <div class="boss-icon" aria-hidden="true">
@@ -103,27 +124,6 @@
       <div class="time-block"><span class="time-number" id="w-m">00</span><span class="time-unit">分</span></div>
       <span class="time-sep" aria-hidden="true">:</span>
       <div class="time-block"><span class="time-number" id="w-s">00</span><span class="time-unit">秒</span></div>
-    </div>
-  </div>
-
-  <!-- Normal Boss -->
-  <div class="card normal">
-    <div class="boss-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-        <line x1="9" y1="9" x2="9.01" y2="9"/>
-        <line x1="15" y1="9" x2="15.01" y2="9"/>
-      </svg>
-    </div>
-    <p class="card-title">巢穴 Boss</p>
-    <p class="label">下次刷新时间</p>
-    <p class="spawn-time" id="n-spawn">计算中…</p>
-    <p class="label">距离刷新还有</p>
-    <div class="countdown-row" role="timer" aria-live="polite">
-      <div class="time-block"><span class="time-number" id="n-m">00</span><span class="time-unit">分</span></div>
-      <span class="time-sep" aria-hidden="true">:</span>
-      <div class="time-block"><span class="time-number" id="n-s">00</span><span class="time-unit">秒</span></div>
     </div>
   </div>
 
