@@ -58,8 +58,37 @@
   .label{font-size:var(--text-xs);color:var(--faint);text-transform:uppercase;letter-spacing:.12em;margin-bottom:var(--space-2);}
   .spawn-time{font-size:var(--text-base);font-weight:500;color:var(--muted);margin-bottom:var(--space-6);font-variant-numeric:tabular-nums;}
 
-  .countdown-row{display:flex;justify-content:center;align-items:flex-end;gap:var(--space-3);margin-bottom:var(--space-2);}
-  .time-block{display:flex;flex-direction:column;align-items:center;gap:var(--space-1);}
+  /* 外层只负责水平居中 */
+  .countdown-row{
+    display:flex;
+    justify-content:center;
+    margin-bottom:var(--space-2);
+  }
+
+  /* 数字块容器：数字行 + 单位行 */
+  .timer-block{ display:flex; flex-direction:column; align-items:center; gap:var(--space-1); }
+
+  /* 数字行：time-number 和 time-sep 同级，直接 center 对齐 */
+  .digit-row{
+    display:flex;
+    align-items:center;
+    gap:var(--space-3);
+  }
+
+  /* 单位行，宽度撑满 digit-row，均匀分布 */
+  .unit-row{
+    display:flex;
+    width:100%;
+    justify-content:space-around;
+    padding:0 var(--space-1);
+  }
+  /* 冒号占位，让单位标签对齐数字块 */
+  .unit-gap{
+    /* 宽度 = gap(space-3) * 2 + time-sep 字符宽度约 0.6em */
+    width:calc(var(--space-3) * 2 + 0.6em);
+    flex-shrink:0;
+  }
+
   .time-number{
     font-size:var(--text-2xl);font-weight:700;color:var(--accent);
     font-variant-numeric:tabular-nums;line-height:1;min-width:2.5ch;
@@ -67,7 +96,11 @@
     border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);
   }
   .time-unit{font-size:var(--text-xs);color:var(--faint);text-transform:uppercase;letter-spacing:.1em;}
-  .time-sep{font-size:var(--text-xl);font-weight:700;color:var(--faint);padding-bottom:var(--space-6);line-height:1;user-select:none;}
+
+  .time-sep{
+    font-size:var(--text-xl);font-weight:700;color:var(--faint);
+    line-height:1;user-select:none;flex-shrink:0;
+  }
 
   @keyframes flash{0%{opacity:1}40%{opacity:.35}100%{opacity:1}}
   .flash{animation:flash .35s ease-out;}
@@ -93,9 +126,18 @@
     <p class="spawn-time" id="n-spawn">计算中…</p>
     <p class="label">距离刷新还有</p>
     <div class="countdown-row" role="timer" aria-live="polite">
-      <div class="time-block"><span class="time-number" id="n-m">00</span><span class="time-unit">分</span></div>
-      <span class="time-sep" aria-hidden="true">:</span>
-      <div class="time-block"><span class="time-number" id="n-s">00</span><span class="time-unit">秒</span></div>
+      <div class="timer-block">
+        <div class="digit-row">
+          <span class="time-number" id="n-m">00</span>
+          <span class="time-sep" aria-hidden="true">:</span>
+          <span class="time-number" id="n-s">00</span>
+        </div>
+        <div class="unit-row">
+          <span class="time-unit">分</span>
+          <span class="unit-gap"></span>
+          <span class="time-unit">秒</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -106,11 +148,22 @@
     <p class="spawn-time" id="w-spawn">计算中…</p>
     <p class="label">距离刷新还有</p>
     <div class="countdown-row" role="timer" aria-live="polite">
-      <div class="time-block"><span class="time-number" id="w-h">00</span><span class="time-unit">时</span></div>
-      <span class="time-sep" aria-hidden="true">:</span>
-      <div class="time-block"><span class="time-number" id="w-m">00</span><span class="time-unit">分</span></div>
-      <span class="time-sep" aria-hidden="true">:</span>
-      <div class="time-block"><span class="time-number" id="w-s">00</span><span class="time-unit">秒</span></div>
+      <div class="timer-block">
+        <div class="digit-row">
+          <span class="time-number" id="w-h">00</span>
+          <span class="time-sep" aria-hidden="true">:</span>
+          <span class="time-number" id="w-m">00</span>
+          <span class="time-sep" aria-hidden="true">:</span>
+          <span class="time-number" id="w-s">00</span>
+        </div>
+        <div class="unit-row">
+          <span class="time-unit">时</span>
+          <span class="unit-gap"></span>
+          <span class="time-unit">分</span>
+          <span class="unit-gap"></span>
+          <span class="time-unit">秒</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -128,9 +181,8 @@
   }
   function getNext(baseMs, intervalMs){
     const now = Date.now();
-    let t = baseMs;
-    while(t <= now) t += intervalMs;
-    return t;
+    const elapsed = now - baseMs;
+    return baseMs + (Math.floor(elapsed / intervalMs) + 1) * intervalMs;
   }
 
   const WORLD = {
@@ -150,7 +202,6 @@
     const now = Date.now();
     if(now >= cfg.next) cfg.next = getNext(cfg.base, cfg.interval);
     const remaining = cfg.next - now;
-    const elapsed   = cfg.interval - remaining;
     const totalSecs = Math.floor(remaining / 1000);
     const h = Math.floor(totalSecs / 3600);
     const m = Math.floor((totalSecs % 3600) / 60);
