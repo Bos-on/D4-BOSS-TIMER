@@ -138,7 +138,7 @@
 
   <!-- World Boss -->
   <div class="card world">
-    <p class="card-title">世界首领</p>
+    <p class="card-title" id="w-title">世界首领</p>
     <p class="label">下次刷新时间</p>
     <p class="spawn-time" id="w-spawn">计算中…</p>
     <p class="label">距离刷新还有</p>
@@ -181,11 +181,48 @@
     const elapsed = now - baseMs;
     return baseMs + (Math.floor(elapsed / intervalMs) + 1) * intervalMs;
   }
+  function getWorldBossInfo(now = Date.now()){
+    const bossNames = ['"疫王"阿煞巴', '徘徊死魔', '"诅咒之金"贪魔'];
+    const worldBossStart = new Date('2023-10-27T22:00:00+08:00').getTime();
+    const worldBossIntervalMs = 12600 * 1000;
+    let start = worldBossStart;
+    let next = null;
+    let round = 0;
+
+    while(now > start){
+      start = next || start;
+      next = start + worldBossIntervalMs;
+      round++;
+
+      if(now < next){
+        break;
+      }
+    }
+
+    if(now < worldBossStart){
+      next = worldBossStart;
+    }
+
+    const mod = round % 15;
+    let bossName = bossNames[0];
+
+    if([3, 4, 10, 11, 12].includes(mod)){
+      bossName = bossNames[1];
+    } else if([5, 6, 7, 13, 14].includes(mod)){
+      bossName = bossNames[2];
+    }
+
+    return {
+      timestamp: next,
+      bossName,
+      dateStr: fmtDate(next),
+    };
+  }
 
   const WORLD = {
     base: new Date('2023-10-27T22:00:00+08:00').getTime(),
     interval: 12600 * 1000,
-    els: { spawn:document.getElementById('w-spawn'), h:document.getElementById('w-h'), m:document.getElementById('w-m'), s:document.getElementById('w-s') },
+    els: { title:document.getElementById('w-title'), spawn:document.getElementById('w-spawn'), h:document.getElementById('w-h'), m:document.getElementById('w-m'), s:document.getElementById('w-s') },
     prev: { h:-1, m:-1, s:-1 }, next:0, hasHours:true,
   };
   const NORMAL = {
@@ -197,13 +234,20 @@
 
   function updateCard(cfg){
     const now = Date.now();
-    if(now >= cfg.next) cfg.next = getNext(cfg.base, cfg.interval);
+    if(cfg === WORLD){
+      const bossInfo = getWorldBossInfo(now);
+      cfg.next = bossInfo.timestamp;
+      cfg.els.title.textContent = bossInfo.bossName;
+      cfg.els.spawn.textContent = bossInfo.dateStr;
+    } else {
+      if(now >= cfg.next) cfg.next = getNext(cfg.base, cfg.interval);
+      cfg.els.spawn.textContent = fmtDate(cfg.next);
+    }
     const remaining = cfg.next - now;
     const totalSecs = Math.floor(remaining / 1000);
     const h = Math.floor(totalSecs / 3600);
     const m = Math.floor((totalSecs % 3600) / 60);
     const s = totalSecs % 60;
-    cfg.els.spawn.textContent = fmtDate(cfg.next);
     if(cfg.hasHours){
       if(h !== cfg.prev.h){ cfg.els.h.textContent = pad(h); flash(cfg.els.h); cfg.prev.h = h; }
       if(m !== cfg.prev.m){ cfg.els.m.textContent = pad(m); flash(cfg.els.m); cfg.prev.m = m; }
